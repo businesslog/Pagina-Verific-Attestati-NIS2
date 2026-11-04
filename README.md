@@ -1,32 +1,63 @@
-# Guida di Integrazione: Verifica Certificati (amministratoridisistema.it)
+# Guida di Integrazione: Modulo Verifica Certificati (amministratoridisistema.it)
 
-Questo pacchetto contiene tutto il necessario per aggiungere la pagina pubblica di verifica certificati al sito aziendale Next.js **amministratoridisistema.it**.
+Questo pacchetto contiene il modulo completo per la verifica pubblica degli attestati di formazione.
+È progettato per essere utilizzato in **due modalità flessibili**:
 
-L'utente potrà raggiungere il servizio direttamente all'indirizzo:
-- `https://amministratoridisistema.it/verifica-certificato`
-- oppure (se si desidera un sottodominio dedicato) `https://verifica.amministratoridisistema.it` tramite opportuno routing o redirect DNS.
+1. **Come pagina autonoma dedicata**: all'indirizzo `/verifica-certificato` (o sul sottodominio `verifica.amministratoridisistema.it`).
+2. **Come componente/sezione integrabile**: all'interno di **qualsiasi pagina già esistente** del sito (ad esempio direttamente nella landing page dei corsi NIS2, in una sezione dedicata o dentro una modale).
 
 ---
 
-## 📦 Struttura dei file inclusi
+## 📦 Struttura dei file
 
 ```text
 ├── src/
+│   ├── components/
+│   │   └── CertificateVerifier.js           <-- COMPONENTE MODULARE RIUTILIZZABILE
 │   ├── app/
 │   │   ├── api/
 │   │   │   └── certificati/
 │   │   │       └── verifica/
-│   │   │           └── route.js                 <-- Endpoint server-side (POST)
+│   │   │           └── route.js             <-- Endpoint server-side (POST, no-cache)
 │   │   └── verifica-certificato/
-│   │       ├── page.js                          <-- Server component con Metadata SEO
-│   │       └── VerificaCertificatoClient.js     <-- Interfaccia responsive utente
+│   │       ├── page.js                      <-- Route page con metadati SEO
+│   │       └── VerificaCertificatoClient.js <-- Wrapper con navbar per visualizzazione a pagina intera
 │   └── lib/
-│       └── serverCertificateVerifier.js         <-- Logica di verifica, allowlist e rate limit
+│       └── serverCertificateVerifier.js     <-- Logica server, allowlist e rate limit
+├── public/
+│   └── logo-bianco-2025.svg                 <-- Logo ufficiale BusinessLOG / Enterprise
 ├── migrations/
-│   └── 002_verify_certificate_rpc_and_rls.sql   <-- Script SQL (RPC Supabase e RLS)
-├── .env.example                                 <-- Esempio variabili d'ambiente server-side
-└── ISTRUZIONI_INTEGRAZIONE.md                   <-- Questa guida
+│   └── 002_verify_certificate_rpc_and_rls.sql <-- Script SQL per Supabase (RPC + RLS)
+└── .env.example                             <-- Template variabili server-side
 ```
+
+---
+
+## 💡 Come usarlo nel sito: le 2 Modalità
+
+### Modalità 1: Inserirlo dentro una pagina esistente (Componente/Sezione)
+Se vuoi integrarlo all'interno di una pagina che ha già la propria navbar e il proprio footer (es. la pagina corsi NIS2):
+
+```jsx
+import CertificateVerifier from '@/components/CertificateVerifier';
+
+export default function MiaPaginaCorsi() {
+  return (
+    <div>
+      {/* Tuoi contenuti esistenti ... */}
+
+      {/* Sezione di verifica certificati */}
+      <CertificateVerifier />
+
+      {/* Oppure versione compatta per modali o spazi ridotti: */}
+      {/* <CertificateVerifier compact={true} /> */}
+    </div>
+  );
+}
+```
+
+### Modalità 2: Pagina autonoma `/verifica-certificato`
+Basta copiare la cartella `src/app/verifica-certificato/`: Next.js creerà automaticamente la rotta `https://amministratoridisistema.it/verifica-certificato`.
 
 ---
 
