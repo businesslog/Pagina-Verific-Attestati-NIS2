@@ -165,9 +165,9 @@ function formatDateSafe(dateStr) {
 function formatPublicCourseName(courseType) {
   const raw = String(courseType || '').toUpperCase();
   if (raw.includes('CSIRT')) {
-    return 'Corso NIS2 IT / CSIRT / Cyber (Direttiva UE 2022/2555)';
+    return 'Corso NIS2 IT / CSIRT / Cyber (Avanzato - Direttiva UE 2022/2555)';
   }
-  return 'Corso NIS2 – Obblighi, ruoli e misure di sicurezza (Direttiva UE 2022/2555)';
+  return 'Corso NIS2 Dipendenti (Base - Direttiva UE 2022/2555)';
 }
 
 /**

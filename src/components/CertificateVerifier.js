@@ -122,6 +122,16 @@ export default function CertificateVerifier({
             e la registrazione nel registro ufficiale di Amministratori di Sistema.
           </p>
 
+          {/* Badge tipologie corsi verificabili */}
+          <div className="course-types-badge">
+            <span className="course-type-pill">
+              <span className="dot-blue"></span> Corso NIS2 Dipendenti (Base)
+            </span>
+            <span className="course-type-pill">
+              <span className="dot-indigo"></span> Corso NIS2 IT / CSIRT / Cyber (Avanzato)
+            </span>
+          </div>
+
           <div className="trust-tags">
             <div className="trust-item">
               <svg className="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -308,6 +318,19 @@ export default function CertificateVerifier({
                         </div>
                       </div>
                     </div>
+
+                    <div className="legacy-notice-box">
+                      <span style={{ fontSize: '1.2rem', flexShrink: 0, marginTop: '2px' }}>ℹ️</span>
+                      <div>
+                        <strong style={{ color: '#ffffff', display: 'block', marginBottom: '4px', fontSize: '0.86rem' }}>
+                          Certificato della vecchia versione privo di codice?
+                        </strong>
+                        <p style={{ margin: 0, fontSize: '0.82rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                          I certificati rilasciati in precedenza mantengono la loro piena validità formale. 
+                          <span style={{ color: '#e2e8f0', fontWeight: 600 }}> Si prega di contattarci direttamente per richiedere l'emissione della nuova versione</span> provvista di codice identificativo verificabile online.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -324,8 +347,7 @@ export default function CertificateVerifier({
               <div className="feature-step-badge">1</div>
               <h3 className="feature-title">Attestato di Partecipazione</h3>
               <p className="feature-desc">
-                Documenta la formazione. Ogni partecipante riceve un attestato nominativo
-                a norma NIS2 con codice identificativo univoco anticontraffazione.
+                Documenta la formazione a norma NIS2 sia per il <strong>Corso Dipendenti (Base)</strong> sia per il <strong>Corso IT / CSIRT / Cyber (Avanzato)</strong>.
               </p>
             </div>
           </div>
@@ -344,11 +366,10 @@ export default function CertificateVerifier({
           <div className="feature-outer-ring">
             <div className="feature-inner">
               <div className="feature-step-badge">3</div>
-              <h3 className="feature-title">Certificati Precedenti</h3>
+              <h3 className="feature-title">Certificati Vecchia Versione</h3>
               <p className="feature-desc">
-                La verifica online è attiva per i certificati emessi con codice univoco.
-                Gli attestati precedenti mantengono piena validità e possono essere convalidati
-                contattando direttamente la nostra segreteria.
+                I certificati emessi nella vecchia versione (privi di codice identificativo) mantengono piena validità formale. 
+                <strong style={{ color: '#ffffff' }}> Si prega di contattarci per richiedere l'emissione della nuova versione</strong> provvista di codice identificativo online.
               </p>
             </div>
           </div>
@@ -419,7 +440,57 @@ export default function CertificateVerifier({
           color: #94a3b8;
           max-width: 620px;
           line-height: 1.6;
+          margin-bottom: 16px;
+        }
+
+        .course-types-badge {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          flex-wrap: wrap;
           margin-bottom: 22px;
+        }
+
+        .course-type-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 5px 12px;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          font-size: 0.8rem;
+          color: #e2e8f0;
+          font-weight: 500;
+        }
+
+        .dot-blue {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #3b82f6;
+          box-shadow: 0 0 6px #3b82f6;
+        }
+
+        .dot-indigo {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #818cf8;
+          box-shadow: 0 0 6px #818cf8;
+        }
+
+        .legacy-notice-box {
+          margin-top: 14px;
+          padding: 12px 14px;
+          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.07);
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          text-align: left;
         }
 
         .trust-tags {
@@ -779,3 +850,4 @@ export default function CertificateVerifier({
     </section>
   );
 }
+
