@@ -10,12 +10,11 @@ import confetti from 'canvas-confetti';
  * Può essere:
  * 1. Usato come pagina autonoma (/verifica-certificato)
  * 2. Integrato come sezione/widget all'interno di QUALSIASI pagina esistente
- *    (es. nella pagina dei corsi NIS2, in una modale o in una sezione dedicata).
  *
  * Props:
- * - compact (boolean): se true, mostra solo il box di verifica (ideale per modali o spazi ridotti)
- * - showFeatures (boolean): se true (default), mostra anche i 3 box informativi sottostanti
- * - initialCode (string): codice iniziale facoltativo da verificare
+ * - compact (boolean): mostra solo il box di verifica
+ * - showFeatures (boolean): mostra i 3 box informativi (default true)
+ * - initialCode (string): codice iniziale opzionale
  */
 export default function CertificateVerifier({
   compact = false,
@@ -30,7 +29,6 @@ export default function CertificateVerifier({
   const [hasSearched, setHasSearched] = useState(false);
   const [resultVisible, setResultVisible] = useState(false);
 
-  // Lettura query param per QR Code (?codice=... o ?id=...)
   useEffect(() => {
     const paramCode = searchParams?.get('codice') || searchParams?.get('id');
     if (paramCode && typeof paramCode === 'string') {
@@ -63,19 +61,19 @@ export default function CertificateVerifier({
       const data = await response.json();
 
       if (response.status === 429) {
-        setErrorMessage(data.message || 'Troppe richieste in un breve intervallo. Attendi qualche istante prima di riprovare.');
+        setErrorMessage(data.message || 'Troppe richieste. Attendi qualche istante e riprova.');
         setIsLoading(false);
         return;
       }
 
       if (!response.ok && data.status === 'error' && data.outcome !== 'NOT_FOUND') {
-        setErrorMessage(data.message || 'Si è verificato un errore durante la verifica.');
+        setErrorMessage(data.message || 'Errore durante la verifica.');
         setIsLoading(false);
         return;
       }
 
       setResult(data);
-      setTimeout(() => setResultVisible(true), 40);
+      setTimeout(() => setResultVisible(true), 50);
 
       if (data.outcome === 'VALID') {
         confetti({
@@ -85,8 +83,8 @@ export default function CertificateVerifier({
           colors: ['#3b82f6', '#10b981', '#ffffff', '#6366f1'],
         });
       }
-    } catch (err) {
-      setErrorMessage('Impossibile contattare il servizio di verifica. Controlla la connessione di rete e riprova.');
+    } catch {
+      setErrorMessage('Impossibile contattare il servizio. Controlla la connessione e riprova.');
     } finally {
       setIsLoading(false);
     }
@@ -106,719 +104,807 @@ export default function CertificateVerifier({
   };
 
   return (
-    <section className="verifier-wrap">
-      {/* 1. HEADER */}
+    <section className="vc-root">
+
+      {/* ── HEADER ─────────────────────────────── */}
       {!compact && (
-        <div className="verifier-header">
-          <div className="pill-badge">
-            <span className="pill-dot" />
-            Conforme D.Lgs. 138/2024 &bull; Direttiva (UE) 2022/2555 (NIS2)
+        <header className="vc-header">
+          <div className="vc-eyebrow">
+            <span className="vc-live-dot" />
+            Registro ufficiale attestati &mdash; Amministratori di Sistema
           </div>
 
-          <h2 className="section-title">
-            Verifica il tuo certificato
-          </h2>
+          <h2 className="vc-title">Verifica certificato</h2>
 
-          <p className="section-subtitle">
-            Inserisci il codice identificativo riportato sull&apos;attestato per verificarne
-            l&apos;autenticità nel registro ufficiale di Amministratori di Sistema.
+          <p className="vc-subtitle">
+            Inserisci il codice identificativo riportato sull&apos;attestato per confermarne
+            l&apos;autenticità e la registrazione ufficiale.
           </p>
 
-          <div className="course-types">
-            <span className="course-pill blue">
-              <span className="dot blue" />
-              Corso NIS2 Dipendenti (Base)
+          <div className="vc-course-tags">
+            <span className="vc-tag blue">
+              <i className="vc-tag-dot" />
+              NIS2 Dipendenti &mdash; Base
             </span>
-            <span className="course-pill indigo">
-              <span className="dot indigo" />
-              Corso NIS2 IT / CSIRT / Cyber (Avanzato)
+            <span className="vc-tag indigo">
+              <i className="vc-tag-dot" />
+              NIS2 IT / CSIRT / Cyber &mdash; Avanzato
             </span>
           </div>
-        </div>
+        </header>
       )}
 
-      {/* 2. CARD VERIFICA */}
-      <div className="card-wrap">
-        <div className="card-body">
-          <form onSubmit={handleSubmit} style={{ width: '100%' }}>
-            <label htmlFor="cert-input" className="input-label">
-              Codice identificativo
-            </label>
+      {/* ── VERIFICA CARD ──────────────────────── */}
+      <div className="vc-card">
 
-            <div style={{ position: 'relative', marginBottom: '14px' }}>
-              <input
-                id="cert-input"
-                type="text"
-                className="cert-input"
-                placeholder="Es. 202605-A1B2C3"
-                value={codice}
-                onChange={(e) => setCodice(e.target.value.toUpperCase())}
-                disabled={isLoading}
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck="false"
-                required
-              />
-              {codice && !isLoading && (
-                <button
-                  type="button"
-                  onClick={() => setCodice('')}
-                  aria-label="Cancella"
-                  className="clear-btn"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
+        {/* Card header */}
+        <div className="vc-card-top">
+          <div className="vc-card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2l7 3v6c0 4.418-3.134 8.556-7 9.9C8.134 19.556 5 15.418 5 11V5l7-3z" />
+            </svg>
+          </div>
+          <div>
+            <div className="vc-card-title">Verifica autenticità</div>
+            <div className="vc-card-hint">Conforme D.Lgs. 138/2024 · Direttiva (UE) 2022/2555</div>
+          </div>
+        </div>
 
-            <div className="btn-row">
-              <button
-                type="submit"
-                className="btn-primary"
-                disabled={isLoading || !codice.trim()}
-              >
-                {isLoading ? (
-                  <>
-                    <span className="spinner" aria-hidden="true" />
-                    Verifica in corso...
-                  </>
-                ) : 'Verifica'}
+        <div className="vc-divider" />
+
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="vc-input" className="vc-label">
+            Codice identificativo
+          </label>
+
+          <div className="vc-input-wrap">
+            <svg className="vc-input-icon" width="15" height="15" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              id="vc-input"
+              type="text"
+              className="vc-input"
+              placeholder="Es. 202605-A1B2C3"
+              value={codice}
+              onChange={(e) => setCodice(e.target.value.toUpperCase())}
+              disabled={isLoading}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck="false"
+              required
+            />
+            {codice && !isLoading && (
+              <button type="button" className="vc-clear" onClick={() => setCodice('')} aria-label="Cancella">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
               </button>
-
-              {hasSearched && (
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={handleReset}
-                  disabled={isLoading}
-                >
-                  Nuova verifica
-                </button>
-              )}
-            </div>
-          </form>
-
-          {/* ESITI */}
-          <div aria-live="polite" style={{ width: '100%' }}>
-            {errorMessage && (
-              <div className="alert-error">
-                <span style={{ flexShrink: 0 }}>⚠️</span>
-                <span>{errorMessage}</span>
-              </div>
-            )}
-
-            {result && (
-              <div className={`result-fade ${resultVisible ? 'in' : ''}`}>
-
-                {/* VALIDO */}
-                {result.outcome === 'VALID' && (
-                  <div className="result-card valid">
-                    <div className="result-top">
-                      <span className="result-icon valid">✓</span>
-                      <div>
-                        <div className="result-title valid">Certificato valido</div>
-                        <div className="result-sub">Documento autentico registrato nel registro ufficiale</div>
-                      </div>
-                    </div>
-                    <div className="result-details">
-                      <div className="detail-row">
-                        <span className="detail-key">Percorso formativo</span>
-                        <span className="detail-val accent">{result.certificate?.course}</span>
-                      </div>
-                      {result.certificate?.issueDate && (
-                        <div className="detail-row">
-                          <span className="detail-key">Data di emissione</span>
-                          <span className="detail-val">{result.certificate.issueDate}</span>
-                        </div>
-                      )}
-                      <div className="detail-row">
-                        <span className="detail-key">Codice verificato</span>
-                        <span className="code-badge">{result.certificate?.code || codice}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* REVOCATO */}
-                {result.outcome === 'REVOKED' && (
-                  <div className="result-card error">
-                    <div className="result-top">
-                      <span className="result-icon error">✕</span>
-                      <div>
-                        <div className="result-title error">{result.title || 'Certificato revocato'}</div>
-                        <div className="result-sub">{result.message}</div>
-                      </div>
-                    </div>
-                    <div style={{ marginTop: '10px', fontSize: '0.82rem', color: '#64748b' }}>
-                      Codice: <span className="code-badge">{result.certificate?.code || codice}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* SCADUTO */}
-                {result.outcome === 'EXPIRED' && (
-                  <div className="result-card warning">
-                    <div className="result-top">
-                      <span className="result-icon warning">⏱</span>
-                      <div>
-                        <div className="result-title warning">{result.title || 'Certificato scaduto'}</div>
-                        <div className="result-sub">{result.message}</div>
-                      </div>
-                    </div>
-                    <div style={{ marginTop: '10px', fontSize: '0.82rem', color: '#64748b' }}>
-                      Codice: <span className="code-badge">{result.certificate?.code || codice}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* NON VALIDO */}
-                {result.outcome === 'INVALID' && (
-                  <div className="result-card error">
-                    <div className="result-top">
-                      <span className="result-icon error">✕</span>
-                      <div>
-                        <div className="result-title error">{result.title || 'Certificato non valido'}</div>
-                        <div className="result-sub">{result.message}</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* NON TROVATO */}
-                {result.outcome === 'NOT_FOUND' && (
-                  <div className="result-card neutral">
-                    <div className="result-top">
-                      <span className="result-icon neutral">?</span>
-                      <div>
-                        <div className="result-title neutral">Codice non trovato</div>
-                        <div className="result-sub">
-                          Nessun attestato corrispondente nel registro. Verifica maiuscole e trattini (es. 202605-A1B2C3).
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="legacy-box">
-                      <span style={{ flexShrink: 0 }}>ℹ️</span>
-                      <div>
-                        <strong style={{ color: '#e2e8f0', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>
-                          Hai un certificato senza codice (vecchia versione)?
-                        </strong>
-                        <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b', lineHeight: 1.55 }}>
-                          I certificati precedenti mantengono piena validità formale.{' '}
-                          <span style={{ color: '#94a3b8' }}>Contattaci per richiedere la nuova versione</span>{' '}
-                          con codice verificabile online.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              </div>
             )}
           </div>
+
+          <div className="vc-actions">
+            <button type="submit" className="vc-btn-primary" disabled={isLoading || !codice.trim()}>
+              {isLoading
+                ? <><span className="vc-spinner" />Verifica in corso…</>
+                : 'Verifica certificato'}
+            </button>
+            {hasSearched && (
+              <button type="button" className="vc-btn-ghost" onClick={handleReset} disabled={isLoading}>
+                Nuova ricerca
+              </button>
+            )}
+          </div>
+        </form>
+
+        {/* ── RISULTATI ── */}
+        <div aria-live="polite">
+          {errorMessage && (
+            <div className="vc-alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {result && (
+            <div className={`vc-result ${resultVisible ? 'show' : ''}`}>
+
+              {/* VALIDO */}
+              {result.outcome === 'VALID' && (
+                <div className="vc-result-card valid">
+                  <div className="vc-result-head">
+                    <div className="vc-status-badge valid">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 6L9 17l-5-5" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="vc-result-title valid">Certificato valido</p>
+                      <p className="vc-result-desc">Documento autentico — registrato nel registro ufficiale</p>
+                    </div>
+                  </div>
+
+                  <div className="vc-result-table">
+                    <div className="vc-row">
+                      <span className="vc-row-key">Percorso formativo</span>
+                      <span className="vc-row-val blue">{result.certificate?.course}</span>
+                    </div>
+                    {result.certificate?.issueDate && (
+                      <div className="vc-row">
+                        <span className="vc-row-key">Data emissione</span>
+                        <span className="vc-row-val">{result.certificate.issueDate}</span>
+                      </div>
+                    )}
+                    <div className="vc-row last">
+                      <span className="vc-row-key">Codice verificato</span>
+                      <code className="vc-code">{result.certificate?.code || codice}</code>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* REVOCATO */}
+              {result.outcome === 'REVOKED' && (
+                <div className="vc-result-card error">
+                  <div className="vc-result-head">
+                    <div className="vc-status-badge error">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="vc-result-title error">{result.title || 'Certificato revocato'}</p>
+                      <p className="vc-result-desc">{result.message}</p>
+                    </div>
+                  </div>
+                  <code className="vc-code" style={{ marginTop: '12px', display: 'inline-block' }}>
+                    {result.certificate?.code || codice}
+                  </code>
+                </div>
+              )}
+
+              {/* SCADUTO */}
+              {result.outcome === 'EXPIRED' && (
+                <div className="vc-result-card warning">
+                  <div className="vc-result-head">
+                    <div className="vc-status-badge warning">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="2.5" strokeLinecap="round">
+                        <circle cx="12" cy="12" r="10" /><path d="M12 7v5l3 3" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="vc-result-title warning">{result.title || 'Certificato scaduto'}</p>
+                      <p className="vc-result-desc">{result.message}</p>
+                    </div>
+                  </div>
+                  <code className="vc-code" style={{ marginTop: '12px', display: 'inline-block' }}>
+                    {result.certificate?.code || codice}
+                  </code>
+                </div>
+              )}
+
+              {/* NON VALIDO */}
+              {result.outcome === 'INVALID' && (
+                <div className="vc-result-card error">
+                  <div className="vc-result-head">
+                    <div className="vc-status-badge error">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="vc-result-title error">{result.title || 'Certificato non valido'}</p>
+                      <p className="vc-result-desc">{result.message}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* NON TROVATO */}
+              {result.outcome === 'NOT_FOUND' && (
+                <div className="vc-result-card neutral">
+                  <div className="vc-result-head">
+                    <div className="vc-status-badge neutral">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        strokeWidth="2.5" strokeLinecap="round">
+                        <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="vc-result-title neutral">Nessun risultato</p>
+                      <p className="vc-result-desc">
+                        Il codice non corrisponde ad alcun attestato nel registro. Controlla maiuscole e trattini (es.&nbsp;202605-A1B2C3).
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="vc-legacy">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, color: '#64748b', marginTop: '1px' }}>
+                      <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
+                    </svg>
+                    <div>
+                      <span className="vc-legacy-title">Hai un certificato senza codice (vecchia versione)?</span>
+                      <span className="vc-legacy-body">
+                        {' '}I certificati precedenti mantengono piena validità. Contattaci per richiedere
+                        la nuova versione con codice verificabile online.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 3. FEATURE CARDS */}
+      {/* ── FEATURE CARDS ─────────────────────── */}
       {!compact && showFeatures && (
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-num">01</div>
-            <h3 className="feature-title">Attestato di partecipazione</h3>
-            <p className="feature-desc">
+        <div className="vc-features">
+          <div className="vc-feature">
+            <div className="vc-feature-num">01</div>
+            <h3 className="vc-feature-title">Attestato di partecipazione</h3>
+            <p className="vc-feature-body">
               Valido per il <strong>Corso NIS2 Dipendenti (Base)</strong> e per il{' '}
-              <strong>Corso IT / CSIRT / Cyber (Avanzato)</strong>.
+              <strong>Corso IT / CSIRT / Cyber (Avanzato)</strong>, conformi alla Direttiva (UE) 2022/2555.
             </p>
           </div>
 
-          <div className="feature-card">
-            <div className="feature-num">02</div>
-            <h3 className="feature-title">Privacy garantita (GDPR)</h3>
-            <p className="feature-desc">
-              La verifica attesta la validità del documento senza esporre
-              dati personali dell&apos;intestatario.
+          <div className="vc-feature">
+            <div className="vc-feature-num">02</div>
+            <h3 className="vc-feature-title">Privacy garantita</h3>
+            <p className="vc-feature-body">
+              La verifica conferma la validità dell&apos;attestato senza esporre dati personali
+              dell&apos;intestatario, nel pieno rispetto del GDPR.
             </p>
           </div>
 
-          <div className="feature-card">
-            <div className="feature-num">03</div>
-            <h3 className="feature-title">Certificati senza codice</h3>
-            <p className="feature-desc">
-              I certificati della vecchia versione restano validi.{' '}
-              <strong style={{ color: '#e2e8f0' }}>Contattaci</strong> per richiedere la nuova versione con codice.
+          <div className="vc-feature">
+            <div className="vc-feature-num">03</div>
+            <h3 className="vc-feature-title">Certificati senza codice</h3>
+            <p className="vc-feature-body">
+              Gli attestati emessi in precedenza (privi di codice) mantengono piena validità formale.{' '}
+              <strong style={{ color: '#cbd5e1' }}>Contattaci</strong> per richiedere la nuova versione.
             </p>
           </div>
         </div>
       )}
 
+      {/* ── STYLES ────────────────────────────── */}
       <style jsx>{`
-        .verifier-wrap {
+
+        /* Root */
+        .vc-root {
           width: 100%;
           max-width: 960px;
           margin: 0 auto;
+          padding: 32px 20px 48px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 24px 16px;
         }
 
-        /* ---- HEADER ---- */
-        .verifier-header {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+        /* ── Header ── */
+        .vc-header {
           text-align: center;
-          margin-bottom: 36px;
-          max-width: 640px;
+          max-width: 580px;
+          margin-bottom: 48px;
         }
 
-        .pill-badge {
+        .vc-eyebrow {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 5px 14px;
-          border-radius: 9999px;
-          background: rgba(74, 222, 128, 0.07);
-          border: 1px solid rgba(74, 222, 128, 0.2);
-          color: #4ade80;
-          font-size: 0.75rem;
+          font-size: 0.72rem;
           font-weight: 600;
-          letter-spacing: 0.03em;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          color: #4ade80;
           margin-bottom: 20px;
         }
 
-        .pill-dot {
+        .vc-live-dot {
+          display: inline-block;
           width: 6px;
           height: 6px;
           border-radius: 50%;
           background: #4ade80;
-        }
-
-        .section-title {
-          font-size: 2.5rem;
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          color: #f1f5f9;
-          margin-bottom: 14px;
-          line-height: 1.15;
-        }
-
-        @media (min-width: 768px) {
-          .section-title { font-size: 3rem; }
-        }
-
-        .section-subtitle {
-          font-size: 1rem;
-          color: #64748b;
-          line-height: 1.65;
-          margin-bottom: 22px;
-        }
-
-        .course-types {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          justify-content: center;
-        }
-
-        .course-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 5px 12px;
-          border-radius: 6px;
-          font-size: 0.78rem;
-          font-weight: 600;
-        }
-
-        .course-pill.blue {
-          background: rgba(59, 130, 246, 0.08);
-          border: 1px solid rgba(59, 130, 246, 0.2);
-          color: #93c5fd;
-        }
-
-        .course-pill.indigo {
-          background: rgba(129, 140, 248, 0.08);
-          border: 1px solid rgba(129, 140, 248, 0.2);
-          color: #c4b5fd;
-        }
-
-        .dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
           flex-shrink: 0;
         }
 
-        .dot.blue { background: #3b82f6; }
-        .dot.indigo { background: #818cf8; }
-
-        /* ---- MAIN CARD ---- */
-        .card-wrap {
-          width: 100%;
-          max-width: 580px;
-          padding: 1px;
-          border-radius: 20px;
-          background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
-          margin-bottom: 40px;
+        .vc-title {
+          font-size: 2.75rem;
+          font-weight: 800;
+          letter-spacing: -0.04em;
+          color: #f8fafc;
+          line-height: 1.1;
+          margin-bottom: 16px;
         }
 
-        .card-body {
-          background: #0d111c;
-          border-radius: 19px;
-          padding: 28px 24px;
-          text-align: left;
+        @media (min-width: 768px) {
+          .vc-title { font-size: 3.5rem; }
+        }
+
+        .vc-subtitle {
+          font-size: 1rem;
+          color: #64748b;
+          line-height: 1.7;
+          margin-bottom: 24px;
+        }
+
+        .vc-course-tags {
           display: flex;
-          flex-direction: column;
-          gap: 0;
+          gap: 8px;
+          justify-content: center;
+          flex-wrap: wrap;
         }
 
-        /* ---- FORM ---- */
-        .input-label {
+        .vc-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          padding: 5px 12px;
+          border-radius: 6px;
+          letter-spacing: 0.01em;
+        }
+
+        .vc-tag.blue {
+          background: rgba(59,130,246,0.08);
+          border: 1px solid rgba(59,130,246,0.18);
+          color: #93c5fd;
+        }
+
+        .vc-tag.indigo {
+          background: rgba(129,140,248,0.08);
+          border: 1px solid rgba(129,140,248,0.18);
+          color: #c4b5fd;
+        }
+
+        .vc-tag-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: currentColor;
+          display: inline-block;
+          flex-shrink: 0;
+        }
+
+        /* ── Main card ── */
+        .vc-card {
+          width: 100%;
+          max-width: 560px;
+          background: #0d111c;
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 16px;
+          padding: 28px;
+          margin-bottom: 40px;
+          box-shadow: 0 20px 48px rgba(0,0,0,0.5);
+        }
+
+        .vc-card-top {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 20px;
+        }
+
+        .vc-card-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          background: rgba(59,130,246,0.1);
+          border: 1px solid rgba(59,130,246,0.18);
+          color: #60a5fa;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .vc-card-title {
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: #f1f5f9;
+          line-height: 1.2;
+        }
+
+        .vc-card-hint {
+          font-size: 0.72rem;
+          color: #334155;
+          margin-top: 2px;
+          font-weight: 500;
+        }
+
+        .vc-divider {
+          height: 1px;
+          background: rgba(255,255,255,0.06);
+          margin-bottom: 22px;
+        }
+
+        /* ── Form ── */
+        .vc-label {
           display: block;
           font-size: 0.72rem;
           font-weight: 700;
-          color: #64748b;
           text-transform: uppercase;
           letter-spacing: 0.08em;
+          color: #475569;
           margin-bottom: 8px;
-          width: 100%;
         }
 
-        .cert-input {
+        .vc-input-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+          margin-bottom: 14px;
+        }
+
+        .vc-input-icon {
+          position: absolute;
+          left: 14px;
+          color: #334155;
+          pointer-events: none;
+          flex-shrink: 0;
+        }
+
+        .vc-input {
           width: 100%;
-          background: #07090f;
-          border: 1px solid rgba(255,255,255,0.09);
+          background: #060810;
+          border: 1px solid rgba(255,255,255,0.08);
           border-radius: 10px;
-          padding: 13px 42px 13px 16px;
-          color: #fff;
-          font-size: 1rem;
+          padding: 13px 42px;
+          color: #f1f5f9;
+          font-size: 0.98rem;
           font-weight: 700;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.08em;
           text-transform: uppercase;
           outline: none;
-          transition: border-color 0.15s, box-shadow 0.15s;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
           box-sizing: border-box;
         }
 
-        .cert-input::placeholder {
-          color: #2d3748;
+        .vc-input::placeholder {
+          color: #1e293b;
           font-weight: 400;
           text-transform: none;
           letter-spacing: 0;
         }
 
-        .cert-input:focus {
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        .vc-input:focus {
+          border-color: rgba(59,130,246,0.6);
+          box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
         }
 
-        .clear-btn {
+        .vc-clear {
           position: absolute;
           right: 12px;
-          top: 50%;
-          transform: translateY(-50%);
           background: none;
           border: none;
-          color: #374151;
-          font-size: 0.95rem;
+          color: #334155;
           cursor: pointer;
-          padding: 4px 6px;
+          padding: 4px;
+          display: flex;
+          align-items: center;
           transition: color 0.15s;
         }
 
-        .clear-btn:hover { color: #94a3b8; }
+        .vc-clear:hover { color: #64748b; }
 
-        /* ---- BUTTONS ---- */
-        .btn-row {
+        /* ── Action buttons ── */
+        .vc-actions {
           display: flex;
           gap: 10px;
         }
 
-        .btn-primary {
+        .vc-btn-primary {
           flex: 1;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 0;
+          gap: 8px;
           background: #3b82f6;
           color: #fff;
           border: none;
           border-radius: 10px;
           padding: 13px 20px;
-          font-size: 0.93rem;
+          font-size: 0.9rem;
           font-weight: 600;
           cursor: pointer;
-          transition: background 0.15s, transform 0.15s;
+          transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+          letter-spacing: 0.01em;
         }
 
-        .btn-primary:hover:not(:disabled) {
+        .vc-btn-primary:hover:not(:disabled) {
           background: #2563eb;
+          box-shadow: 0 4px 16px rgba(37,99,235,0.35);
           transform: translateY(-1px);
         }
 
-        .btn-primary:active:not(:disabled) {
+        .vc-btn-primary:active:not(:disabled) {
           transform: none;
+          box-shadow: none;
         }
 
-        .btn-primary:disabled {
-          opacity: 0.4;
+        .vc-btn-primary:disabled {
+          opacity: 0.35;
           cursor: not-allowed;
         }
 
-        .btn-secondary {
+        .vc-btn-ghost {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          background: transparent;
-          color: #64748b;
-          border: 1px solid rgba(255,255,255,0.09);
+          background: none;
+          color: #475569;
+          border: 1px solid rgba(255,255,255,0.08);
           border-radius: 10px;
           padding: 13px 16px;
-          font-size: 0.88rem;
+          font-size: 0.87rem;
           font-weight: 500;
           cursor: pointer;
-          transition: color 0.15s, border-color 0.15s;
           white-space: nowrap;
+          transition: color 0.15s, border-color 0.15s;
         }
 
-        .btn-secondary:hover {
+        .vc-btn-ghost:hover {
           color: #94a3b8;
-          border-color: rgba(255,255,255,0.18);
+          border-color: rgba(255,255,255,0.15);
         }
 
-        .spinner {
+        .vc-spinner {
           display: inline-block;
           width: 14px;
           height: 14px;
           border: 2px solid rgba(255,255,255,0.2);
           border-top-color: #fff;
           border-radius: 50%;
-          animation: spin 0.6s linear infinite;
-          margin-right: 8px;
+          animation: vc-spin 0.6s linear infinite;
+          flex-shrink: 0;
         }
 
-        @keyframes spin {
+        @keyframes vc-spin {
           to { transform: rotate(360deg); }
         }
 
-        /* ---- ALERT ---- */
-        .alert-error {
+        /* ── Alert ── */
+        .vc-alert {
           display: flex;
           align-items: flex-start;
           gap: 10px;
-          background: rgba(239,68,68,0.07);
+          background: rgba(239,68,68,0.06);
           border: 1px solid rgba(239,68,68,0.2);
-          color: #fca5a5;
+          color: #f87171;
           border-radius: 10px;
           padding: 13px 16px;
-          margin-top: 16px;
-          font-size: 0.87rem;
-          line-height: 1.5;
-          width: 100%;
-          box-sizing: border-box;
-        }
-
-        /* ---- RESULT FADE ---- */
-        .result-fade {
           margin-top: 18px;
-          width: 100%;
-          opacity: 0;
-          transform: translateY(6px);
-          transition: opacity 0.28s ease, transform 0.28s ease;
+          font-size: 0.86rem;
+          line-height: 1.55;
         }
 
-        .result-fade.in {
+        /* ── Result container ── */
+        .vc-result {
+          margin-top: 20px;
+          opacity: 0;
+          transform: translateY(8px);
+          transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .vc-result.show {
           opacity: 1;
           transform: none;
         }
 
-        /* ---- RESULT CARDS ---- */
-        .result-card {
+        /* ── Result cards ── */
+        .vc-result-card {
           border-radius: 12px;
           padding: 18px;
-          text-align: left;
         }
 
-        .result-card.valid {
-          background: rgba(16,185,129,0.06);
-          border: 1px solid rgba(16,185,129,0.22);
+        .vc-result-card.valid {
+          background: rgba(16,185,129,0.05);
+          border: 1px solid rgba(16,185,129,0.2);
         }
 
-        .result-card.error {
-          background: rgba(239,68,68,0.06);
-          border: 1px solid rgba(239,68,68,0.22);
+        .vc-result-card.error {
+          background: rgba(239,68,68,0.05);
+          border: 1px solid rgba(239,68,68,0.2);
         }
 
-        .result-card.warning {
-          background: rgba(245,158,11,0.06);
-          border: 1px solid rgba(245,158,11,0.22);
+        .vc-result-card.warning {
+          background: rgba(245,158,11,0.05);
+          border: 1px solid rgba(245,158,11,0.2);
         }
 
-        .result-card.neutral {
+        .vc-result-card.neutral {
           background: rgba(255,255,255,0.02);
           border: 1px solid rgba(255,255,255,0.08);
         }
 
-        .result-top {
+        .vc-result-head {
           display: flex;
           align-items: flex-start;
           gap: 12px;
-          margin-bottom: 14px;
+          margin-bottom: 16px;
         }
 
-        .result-icon {
-          width: 36px;
-          height: 36px;
+        .vc-status-badge {
+          width: 30px;
+          height: 30px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.1rem;
-          font-weight: 700;
           flex-shrink: 0;
-          line-height: 1;
+          margin-top: 1px;
         }
 
-        .result-icon.valid { background: rgba(16,185,129,0.15); color: #10b981; }
-        .result-icon.error { background: rgba(239,68,68,0.15); color: #ef4444; }
-        .result-icon.warning { background: rgba(245,158,11,0.15); color: #f59e0b; }
-        .result-icon.neutral { background: rgba(255,255,255,0.05); color: #94a3b8; }
+        .vc-status-badge.valid  { background: rgba(16,185,129,0.15);  color: #10b981; }
+        .vc-status-badge.error  { background: rgba(239,68,68,0.15);   color: #ef4444; }
+        .vc-status-badge.warning{ background: rgba(245,158,11,0.15);  color: #f59e0b; }
+        .vc-status-badge.neutral{ background: rgba(255,255,255,0.06); color: #64748b; }
 
-        .result-title {
-          font-size: 1rem;
+        .vc-result-title {
+          font-size: 0.98rem;
           font-weight: 700;
-          line-height: 1.3;
+          line-height: 1.25;
+          margin: 0 0 4px;
         }
 
-        .result-title.valid { color: #86efac; }
-        .result-title.error { color: #fca5a5; }
-        .result-title.warning { color: #fde68a; }
-        .result-title.neutral { color: #e2e8f0; }
+        .vc-result-title.valid   { color: #6ee7b7; }
+        .vc-result-title.error   { color: #fca5a5; }
+        .vc-result-title.warning { color: #fde68a; }
+        .vc-result-title.neutral { color: #e2e8f0; }
 
-        .result-sub {
-          font-size: 0.82rem;
-          color: #475569;
-          margin-top: 3px;
-          line-height: 1.5;
+        .vc-result-desc {
+          font-size: 0.8rem;
+          color: #334155;
+          line-height: 1.55;
+          margin: 0;
         }
 
         /* Details table */
-        .result-details {
-          background: rgba(0,0,0,0.25);
+        .vc-result-table {
+          background: rgba(0,0,0,0.3);
           border: 1px solid rgba(255,255,255,0.05);
           border-radius: 10px;
           overflow: hidden;
         }
 
-        .detail-row {
+        .vc-row {
           display: flex;
-          flex-direction: column;
-          gap: 2px;
+          justify-content: space-between;
+          align-items: baseline;
           padding: 10px 14px;
           border-bottom: 1px solid rgba(255,255,255,0.04);
+          gap: 12px;
+          flex-wrap: wrap;
         }
 
-        .detail-row:last-child { border-bottom: none; }
+        .vc-row.last { border-bottom: none; }
 
-        .detail-key {
-          font-size: 0.65rem;
+        .vc-row-key {
+          font-size: 0.7rem;
+          font-weight: 700;
           color: #334155;
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          font-weight: 700;
+          letter-spacing: 0.08em;
+          flex-shrink: 0;
         }
 
-        .detail-val {
-          font-size: 0.92rem;
+        .vc-row-val {
+          font-size: 0.88rem;
           color: #e2e8f0;
-          font-weight: 500;
-        }
-
-        .detail-val.accent {
-          color: #60a5fa;
           font-weight: 600;
+          text-align: right;
         }
 
-        .code-badge {
-          display: inline-block;
-          font-family: monospace;
-          font-size: 0.85rem;
+        .vc-row-val.blue { color: #60a5fa; }
+
+        .vc-code {
+          font-family: 'Courier New', monospace;
+          font-size: 0.82rem;
           font-weight: 700;
           color: #93c5fd;
           background: rgba(59,130,246,0.08);
-          border: 1px solid rgba(59,130,246,0.2);
+          border: 1px solid rgba(59,130,246,0.18);
           padding: 3px 9px;
           border-radius: 5px;
-          letter-spacing: 0.04em;
-          width: fit-content;
+          letter-spacing: 0.05em;
         }
 
         /* Legacy notice */
-        .legacy-box {
+        .vc-legacy {
           display: flex;
           align-items: flex-start;
           gap: 10px;
-          background: rgba(255,255,255,0.025);
+          margin-top: 14px;
+          padding: 12px 14px;
+          background: rgba(255,255,255,0.02);
           border: 1px solid rgba(255,255,255,0.06);
           border-radius: 8px;
-          padding: 12px 14px;
-          margin-top: 12px;
           text-align: left;
+          font-size: 0.82rem;
+          line-height: 1.55;
         }
 
-        /* ---- FEATURES ---- */
-        .features-grid {
+        .vc-legacy-title {
+          font-weight: 700;
+          color: #94a3b8;
+        }
+
+        .vc-legacy-body {
+          color: #475569;
+        }
+
+        /* ── Feature cards ── */
+        .vc-features {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 14px;
+          gap: 1px;
           width: 100%;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 16px;
+          overflow: hidden;
         }
 
         @media (min-width: 768px) {
-          .features-grid { grid-template-columns: repeat(3, 1fr); }
+          .vc-features { grid-template-columns: repeat(3,1fr); }
         }
 
-        .feature-card {
-          background: #0d111c;
-          border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 14px;
-          padding: 22px 20px;
-          text-align: left;
-          transition: border-color 0.2s;
+        .vc-feature {
+          background: #0a0e1a;
+          padding: 28px 24px;
+          transition: background 0.2s;
         }
 
-        .feature-card:hover {
-          border-color: rgba(255,255,255,0.14);
-        }
+        .vc-feature:hover { background: #0d111c; }
 
-        .feature-num {
-          font-size: 0.7rem;
-          font-weight: 700;
+        .vc-feature-num {
+          font-size: 0.65rem;
+          font-weight: 800;
+          letter-spacing: 0.12em;
           color: #3b82f6;
-          letter-spacing: 0.08em;
-          margin-bottom: 12px;
+          text-transform: uppercase;
+          margin-bottom: 14px;
         }
 
-        .feature-title {
+        .vc-feature-title {
           font-size: 0.95rem;
           font-weight: 700;
           color: #f1f5f9;
-          margin-bottom: 8px;
+          margin-bottom: 10px;
           line-height: 1.3;
         }
 
-        .feature-desc {
+        .vc-feature-body {
           font-size: 0.83rem;
           color: #475569;
-          line-height: 1.6;
+          line-height: 1.65;
           margin: 0;
         }
 
-        /* ---- RESPONSIVE ---- */
+        /* ── Responsive ── */
         @media (max-width: 640px) {
-          .section-title { font-size: 2rem; }
-          .card-body { padding: 22px 18px; }
+          .vc-title { font-size: 2.1rem; }
+          .vc-card  { padding: 20px 16px; }
+          .vc-row   { flex-direction: column; gap: 4px; }
+          .vc-row-val { text-align: left; }
         }
       `}</style>
     </section>
